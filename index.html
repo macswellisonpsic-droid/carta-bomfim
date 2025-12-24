@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Meu Irmão</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* MUDANÇA: Paleta Azul Bebê */
+            --cor-fundo: #f0f9ff;         /* Azul muito claro para o fundo */
+            --cor-envelope: #bae6fd;      /* Azul bebê para o envelope externo */
+            --cor-envelope-interna: #7dd3fc; /* Azul um pouco mais vivo para a aba interna */
+            --cor-papel: #ffffff;
+            --cor-texto: #0c4a6e;         /* Azul escuro para o texto (leitura fácil) */
+            --cor-detalhe: #0284c7;       /* Azul destaque para assinaturas e detalhes */
+            --ouro: #ffd700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--cor-fundo);
+            font-family: 'Lora', serif;
+            overflow: hidden; /* Impede rolagem indesejada enquanto a carta está fechada */
+        }
+
+        #aviso-topo {
+            position: fixed;
+            top: 15px;
+            text-align: center;
+            color: var(--cor-detalhe);
+            font-weight: bold;
+            z-index: 200; /* Aviso sempre no topo de tudo */
+            background: rgba(255,255,255,0.95);
+            padding: 8px 15px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            font-size: 14px;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .girassol-fundo {
+            position: absolute;
+            font-size: 2.2rem;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.4s ease;
+            filter: grayscale(1) opacity(0.4); /* Aumentei opacidade base para facilitar ver */
+            
+            /* CORREÇÃO PRINCIPAL: Z-Index alto para ficar SOBRE o envelope fechado */
+            z-index: 20; 
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-tap-highlight-color: transparent; /* Remove flash azul no mobile */
+        }
+
+        .girassol-fundo.aceso {
+            filter: grayscale(0) opacity(1) drop-shadow(0 0 10px rgba(255, 223, 0, 0.8));
+            transform: scale(1.1);
+        }
+
+        .palavra-pop {
+            font-size: 11px;
+            color: white;
+            background: var(--cor-detalhe);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: bold;
+            opacity: 0;
+            transition: 0.3s;
+            padding: 4px 8px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            pointer-events: none; /* Garante que o clique vá para o coração/div */
+        }
+
+        .girassol-fundo.aceso .palavra-pop { opacity: 1; }
+
+        .container {
+            position: relative;
+            z-index: 5; /* Envelope fica abaixo dos corações enquanto fechado */
+            perspective: 1000px;
+            margin-top: 30px;
+            cursor: pointer;
+        }
+
+        .envelope-wrapper {
+            position: relative;
+            width: 480px;
+            height: 300px;
+            background-color: var(--cor-envelope);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: transform 0.5s;
+        }
+        
+        /* Efeito de hover apenas se não estiver aberto */
+        .container:not(.aberto):hover .envelope-wrapper {
+            transform: scale(1.02);
+        }
+
+        .carta {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 94%;
+            height: 90%;
+            background: var(--cor-papel);
+            padding: 35px;
+            box-sizing: border-box;
+            transition: all 1s ease-in-out;
+            z-index: 2;
+            overflow-y: auto;
+            /* Esconde a barra de rolagem mas permite rolar */
+            scrollbar-width: none; 
+        }
+        .carta::-webkit-scrollbar { display: none; }
+
+        .destinatario { font-family: 'Dancing Script', cursive; font-size: 1.6rem; color: var(--cor-detalhe); margin-bottom: 15px; display: block; }
+        .texto-carta { font-size: 0.95rem; line-height: 1.7; color: var(--cor-texto); text-align: justify; }
+
+        .envelope-wrapper::before {
+            content: "";
+            position: absolute;
+            z-index: 4;
+            border-top: 150px solid transparent;
+            border-right: 240px solid var(--cor-envelope);
+            border-bottom: 150px solid var(--cor-envelope);
+            border-left: 240px solid var(--cor-envelope);
+            pointer-events: none; /* Permite clicar no conteúdo */
+        }
+
+        .aba {
+            position: absolute;
+            top: 0; width: 0; height: 0;
+            border-top: 150px solid var(--cor-envelope-interna);
+            border-left: 240px solid transparent;
+            border-right: 240px solid transparent;
+            transform-origin: top;
+            transition: all 0.6s ease-in-out;
+            z-index: 5;
+        }
+
+        .selo {
+            position: absolute;
+            top: 125px; left: 50%; transform: translateX(-50%);
+            width: 55px; height: 55px;
+            background: var(--cor-detalhe);
+            border-radius: 50%;
+            z-index: 6;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            transition: 0.5s;
+            border: 2px solid white;
+        }
+
+        .selo.liberado {
+            background: var(--ouro);
+            box-shadow: 0 0 20px var(--ouro);
+            animation: pulse 1.5s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        .container.aberto .aba { transform: rotateX(180deg); z-index: 1; }
+        
+        /* CORREÇÃO PARA LEITURA: Quando aberto, a carta vai para z-index 100, acima de tudo */
+        .container.aberto .carta { 
+            height: 480px; 
+            transform: translate(-50%, -200px); 
+            z-index: 100; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2); 
+        }
+        
+        .container.aberto .selo { opacity: 0; pointer-events: none; }
+
+        .assinatura { text-align: right; margin-top: 35px; font-family: 'Dancing Script', cursive; font-size: 1.4rem; color: var(--cor-detalhe); }
+
+        /* Ajustes para Celular */
+        @media (max-width: 600px) {
+            .envelope-wrapper { width: 300px; height: 200px; }
+            .envelope-wrapper::before { border-width: 100px 150px; }
+            .aba { border-width: 100px 150px; }
+            .selo { top: 85px; width: 45px; height: 45px; font-size: 20px; }
+            
+            /* Ajuste da carta no mobile */
+            .container.aberto .carta { 
+                height: 420px; 
+                width: 90vw; /* Usa largura da tela */
+                transform: translate(-50%, -180px); 
+            }
+
+            /* Diminui um pouco os corações no mobile para não poluir tanto */
+            .girassol-fundo { font-size: 1.8rem; }
+            .palavra-pop { font-size: 10px; padding: 2px 6px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="aviso-topo">Ilumine os 10 corações para abrir a carta da sua irmã (<span id="count">0</span>/10)</div>
+
+    <audio id="playerMusica">
+        <source src="https://files.catbox.moe/oq6lhz.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="somClick">
+        <source src="https://files.catbox.moe/fwh404.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="girassol-fundo" style="top: 10%; left: 5%;" onclick="acender(this)"><span class="palavra-pop">Amor</span>❤️</div>
+    <div class="girassol-fundo" style="top: 12%; right: 5%;" onclick="acender(this)"><span class="palavra-pop">Maternidade</span>🧡</div>
+    
+    <div class="girassol-fundo" style="bottom: 12%; left: 8%;" onclick="acender(this)"><span class="palavra-pop">Força</span>💛</div>
+    <div class="girassol-fundo" style="bottom: 15%; right: 8%;" onclick="acender(this)"><span class="palavra-pop">Luz</span>💚</div>
+    
+    <div class="girassol-fundo" style="top: 50%; left: 2%;" onclick="acender(this)"><span class="palavra-pop">Coragem</span>💙</div>
+    <div class="girassol-fundo" style="top: 50%; right: 2%;" onclick="acender(this)"><span class="palavra-pop">Cuidado</span>💜</div>
+    
+    <div class="girassol-fundo" style="top: 25%; left: 15%;" onclick="acender(this)"><span class="palavra-pop">Orgulho</span>💖</div>
+    <div class="girassol-fundo" style="top: 25%; right: 15%;" onclick="acender(this)"><span class="palavra-pop">Transformação</span>💗</div>
+    
+    <div class="girassol-fundo" style="bottom: 25%; right: 20%;" onclick="acender(this)"><span class="palavra-pop">Gratidão</span>💕</div>
+    <div class="girassol-fundo" style="bottom: 25%; left: 20%;" onclick="acender(this)"><span class="palavra-pop">Família</span>💟</div>
+
+    <div class="container" id="envelopeContainer" onclick="tentarAbrir()">
+        <div class="envelope-wrapper">
+            <div class="aba"></div>
+            <div class="selo" id="seloCadeado">🔒</div>
+            
+            <div class="carta">
+                <span class="destinatario">Para Meu Irmão Inailson,</span>
+                
+                <div class="texto-carta">
+                    <p>Lembra que falei que não era o momento certo para te mandar uma carta direcionada a você? Agora é o momento! Dentre infinitas coisas que poderiam ter me acontecido ao longo desses últimos anos, você é de longe a melhor.</p>
+
+                    <p>Cheguei no teu espaço e fui me acostumando aos poucos, dentre tantas e tantas coisas que poderiam me ocorrer, Deus me direcionou até você, eu sem saber que ele estava planejando algo maior, me direcionando não só a um irmão, mas a um lugar onde eu me sentiria acolhido, em paz, onde eu poderia ser eu, onde tinha luz, porque você é isso, é luz para mim e para muita gente, você é esse lugar, você me ensinou tantas coisas, nós nos ensinamos muitas coisas todos os dias.</p>
+
+                    <p>Sabe quais são os melhores momentos do dia, quando estamos rindo, falando besteira, nossos madrugadas conversando besteira e esfomeados atrás de comida, nos xingando e vivendo! Existe coisa melhor que essa? Não sou tão forte quanto pareço, às vezes quero desabar, mas só de estar ali com você, com Mel, me sinto melhor, e você sabe que não falo da minha família biológica, porque o significado de família vai para além disso, nossa família é constituída por eu, você e uma doguinha peluda linda, amo vocês, e são minha família, vocês foram um presente de Deus, ele me colocou nesse lugar por um motivo, eu sou grato demais por ter cada um de vocês na minha vida.</p>
+
+                    <p>Eu amo você, não só por tudo isso, mas pelo que você significa para mim, se eu fosse por em palavras não saberia onde terminar, mas saberia onde iniciar.</p>
+                    
+                    <p>Com todo meu carinho.</p>
+                </div>
+
+                <div class="assinatura">
+                    Do seu Irmão,<br>
+                    <strong>Wellison</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let girassoisAcesos = 0;
+        const totalGirassois = 10;
+        const musica = document.getElementById('playerMusica');
+        const somClick = document.getElementById('somClick');
+
+        function acender(elemento) {
+            if (!elemento.classList.contains('aceso')) {
+                // Toca o som suave
+                somClick.currentTime = 0; // Reinicia o som se clicar rápido
+                somClick.play().catch(e => console.log("Erro som click", e));
+
+                elemento.classList.add('aceso');
+                girassoisAcesos++;
+                document.getElementById('count').innerText = girassoisAcesos;
+                
+                if (girassoisAcesos === totalGirassois) {
+                    const selo = document.getElementById('seloCadeado');
+                    selo.innerText = "🔓";
+                    selo.classList.add('liberado');
+                    document.getElementById('aviso-topo').innerText = "Cadeado aberto! Clique no envelope. ✨";
+                }
+            }
+            // ISSO É IMPORTANTE: Impede que o clique no coração tente abrir a carta
+            event.stopPropagation();
+        }
+
+        function tentarAbrir() {
+            if (girassoisAcesos < totalGirassois) {
+                // Efeito visual de "negado" se tentar abrir antes da hora
+                const selo = document.getElementById('seloCadeado');
+                selo.style.transform = "translateX(-50%) scale(1.2)";
+                setTimeout(() => selo.style.transform = "translateX(-50%) scale(1)", 200);
+                
+                // Alert simples (ou mude para um aviso na tela se preferir)
+                // alert("Ilumine todos os corações para abrir a carta!");
+            } else {
+                const container = document.getElementById('envelopeContainer');
+                
+                // Abre a carta
+                container.classList.toggle('aberto');
+
+                // Toca a música APENAS se a carta estiver abrindo
+                if (container.classList.contains('aberto')) {
+                    musica.play().catch(error => {
+                        console.log("Autoplay bloqueado pelo navegador. Interaja com a página.");
+                    });
+                } else {
+                    musica.pause();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
